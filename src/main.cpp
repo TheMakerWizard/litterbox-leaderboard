@@ -114,30 +114,9 @@ float peak(std::vector<float> v){
 
 // end maths
 
-// TODO seed_studio sensor pm2.5 class
-// TODO Webserver
 // TODO LCD screen setup
-// TODO Make a cable for the scale connection
-// BUTTON Interrupts
-
+// TODO BUTTON Interrupts
 // TODO Create a bowel_movement class
-// start timestamp
-// when cat enters box, create a new one
-// while cat in box, add sensor data to bowel_movement
-// end timestamp
-//
-// analyze movement when done
-// store/save leaderboard in EEPROM?
-
-
-// power on
-// set tare (litterbox with litter)
-// monitor weight until it is within ~1 lb of cat weight
-// start bowel_movement tracker
-// wait for cat to leave
-// analyze bowel movement (time taken, weight, "smell")
-// reset tare
-// wait for cat ...
 
 bool isCatPresent(){
   return cell.getData() > 5;
@@ -145,7 +124,6 @@ bool isCatPresent(){
 
 bool detectCat(){
   // get weight data
-  // cell.update();
   float weight = cell.getData();
 
   for(int i = 0; i < NUM_CATS; i++ ){
@@ -158,11 +136,6 @@ bool detectCat(){
       return true;
     }
   }
-  // try to get cat based on weight
-  // if found_cat set cat
-  // else set catPresent false
-  // catPresent = false;
-  // currentCat = 0;
   return false;
 }
 
@@ -199,7 +172,8 @@ void updateLeaderBoards(BM bowel_movement){
 
 void sensor_loop(){
   cell.update();
-  // pm.update();
+  pmSensor.update();
+
   // cat was not present but now is
   if(isCatPresent() && !catPresent){
     if(detectCat()){
@@ -234,20 +208,24 @@ void sensor_loop(){
   }
 }
 
+
+// send 200 ok
 void send_200(WiFiClient client){
   client.println("HTTP/1.1 200 OK");
   client.println("Content-Type: text/html");
-  client.println("Connection: close");  // the connection will be closed after completion of the response
+  client.println("Connection: close");
   client.println();
 }
 
+// send 404 not found
 void send_404(WiFiClient client){
   client.println("HTTP/1.1 404 Not Found");
   client.println("Content-Type: text/html");
-  client.println("Connection: close");  // the connection will be closed after completion of the response
+  client.println("Connection: close");
   client.println();
 }
 
+// Send small responses
 void send_response(WiFiClient client, int res_code, String res_body = ""){
   switch (res_code){
     case 200:
@@ -262,6 +240,7 @@ void send_response(WiFiClient client, int res_code, String res_body = ""){
   }
 }
 
+// sends the CSS!
 void sendCSS(WiFiClient client){
   const char *css = "<style>"
   "table {border-collapse: collapse; padding-bottom: 10px;}"
@@ -271,6 +250,8 @@ void sendCSS(WiFiClient client){
 
   client.println(css);
 }
+
+// leaderboard display
 void sendLeaderBoard(String name,WiFiClient client, vector<BM> leaderboard){
   client.print("<div><table><th colspan='4'>");
   client.print(name);
@@ -292,6 +273,8 @@ void sendLeaderBoard(String name,WiFiClient client, vector<BM> leaderboard){
   client.println("</table></div>");
 }
 
+
+// handle HTTP Request (badly)
 void handle_request(WiFiClient client){
   String request = "";
   boolean currentLineIsBlank = true;
@@ -337,6 +320,7 @@ void handle_request(WiFiClient client){
   Serial.write(request.c_str());
 }
 
+// webserver loop
 void webserver_loop(){
   WiFiClient client = webserver.available();
   if(client){
@@ -346,12 +330,12 @@ void webserver_loop(){
 
 
 void loop() {
-  pmSensor.update();
   Serial.println(String(pmSensor.getValue()));
   sensor_loop();
   cell.print();
   webserver_loop();
   // weefee.printWifiStatus();
 
+  // TODO sensor_loop 1/s , webserver_loop all the time
   delay(1000);
 }

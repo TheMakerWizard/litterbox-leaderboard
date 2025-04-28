@@ -1,4 +1,4 @@
-
+// i probably didnt need this class...
 
 #ifndef C_WIFI
 #include "WiFiS3.h"
